@@ -27,6 +27,14 @@ export function GitPanel({ projectId }: { projectId: string }) {
     queryFn: () => fetchJson<{ branches: GitBranch[] }>(`/api/git/branches?projectId=${projectId}`),
   });
 
+  if (status.isError) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        {status.error instanceof Error ? status.error.message : "Falha ao ler o estado do git."}
+      </p>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">

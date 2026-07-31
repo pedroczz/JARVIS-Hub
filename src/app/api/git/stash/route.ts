@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { stashList, stashSave } from "@/lib/git/operations";
-import { requirePermission, resolveProjectOrError } from "@/lib/git/resolve-project";
+import { requirePermission, resolveProjectOrError, runGitOrError } from "@/lib/git/resolve-project";
 
 export async function GET(request: NextRequest) {
   const projectId = request.nextUrl.searchParams.get("projectId");
   const resolved = await resolveProjectOrError(projectId);
   if ("error" in resolved) return resolved.error;
 
-  const stashes = await stashList(resolved.project.path);
+  const stashes = await runGitOrError(() => stashList(resolved.project.path));
+  if (stashes instanceof NextResponse) return stashes;
   return NextResponse.json({ stashes });
 }
 
@@ -20,6 +21,7 @@ export async function POST(request: NextRequest) {
   const forbidden = requirePermission(resolved.project, "git");
   if (forbidden) return forbidden;
 
-  const output = await stashSave(resolved.project.path, body.message);
+  const output = await runGitOrError(() => stashSave(resolved.project.path, body.message));
+  if (output instanceof NextResponse) return output;
   return NextResponse.json({ output });
 }

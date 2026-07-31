@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getLog } from "@/lib/git/operations";
-import { resolveProjectOrError } from "@/lib/git/resolve-project";
+import { resolveProjectOrError, runGitOrError } from "@/lib/git/resolve-project";
 
 export async function GET(request: NextRequest) {
   const projectId = request.nextUrl.searchParams.get("projectId");
@@ -9,6 +9,9 @@ export async function GET(request: NextRequest) {
   const resolved = await resolveProjectOrError(projectId);
   if ("error" in resolved) return resolved.error;
 
-  const log = await getLog(resolved.project.path, limitParam ? Number(limitParam) : undefined);
+  const log = await runGitOrError(() =>
+    getLog(resolved.project.path, limitParam ? Number(limitParam) : undefined)
+  );
+  if (log instanceof NextResponse) return log;
   return NextResponse.json({ log });
 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { checkoutBranch } from "@/lib/git/operations";
-import { requirePermission, resolveProjectOrError } from "@/lib/git/resolve-project";
+import { requirePermission, resolveProjectOrError, runGitOrError } from "@/lib/git/resolve-project";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
   const branch = typeof body.branch === "string" ? body.branch : null;
   if (!branch) return NextResponse.json({ error: "Campo 'branch' é obrigatório." }, { status: 400 });
 
-  await checkoutBranch(resolved.project.path, branch);
+  const result = await runGitOrError(() => checkoutBranch(resolved.project.path, branch));
+  if (result instanceof NextResponse) return result;
   return NextResponse.json({ ok: true });
 }

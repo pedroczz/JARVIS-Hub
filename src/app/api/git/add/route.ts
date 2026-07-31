@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { stageAll } from "@/lib/git/operations";
-import { requirePermission, resolveProjectOrError } from "@/lib/git/resolve-project";
+import { requirePermission, resolveProjectOrError, runGitOrError } from "@/lib/git/resolve-project";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
   const forbidden = requirePermission(resolved.project, "git");
   if (forbidden) return forbidden;
 
-  await stageAll(resolved.project.path);
+  const result = await runGitOrError(() => stageAll(resolved.project.path));
+  if (result instanceof NextResponse) return result;
   return NextResponse.json({ ok: true });
 }
