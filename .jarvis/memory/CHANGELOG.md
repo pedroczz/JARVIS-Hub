@@ -2,6 +2,12 @@
 
 _Mudanças notáveis, mais recente no topo._
 
+## 2026-07-31 (3)
+
+- `docs/planning/`: Architecture v2, Roadmap v2 e specs dos módulos 01–08 e 10 (Core, Project Manager, Memory Manager, Git Manager, AI Engine, Inventory Manager, Excel Connector, Workflow Engine, Catalog Manager) fornecidos pelo usuário como visão de plataforma de longo prazo — persistidos como referência, não implementados.
+- `src/core/`: Fase 01 (Core) implementada em escopo MVP — registry de módulos + health check, sem event bus/service container/lifecycle (adiados até haver necessidade real). Os 4 services existentes (project-registry, memory, git, claude-cli) registrados nele.
+- **Doctor** deixou de ser stub: `/doctor` mostra saúde real dos módulos do Core via `/api/health`. Primeiro dos 12 módulos "em breve" a virar funcional.
+
 ## 2026-07-31 (2)
 
 - Refatoração feature-first + service layer + repository pattern: `src/lib/*` virou `services/` (domínio) + `lib/exec-git.ts` (infra pura); `components/{projects,chat,git}` viraram `features/{projects,chat,git}/components`; `stores/` → `store/`; novos `config/`, `utils/`, `providers/`.
