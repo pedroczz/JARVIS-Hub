@@ -10,6 +10,14 @@ export interface RunClaudeOptions {
 }
 
 /**
+ * Caminho do executável da Claude Code CLI. Por padrão assume `claude` no
+ * PATH; em instalações onde só a extensão do VS Code está presente (sem CLI
+ * standalone), aponte CLAUDE_CLI_PATH para o binário nativo dela — ver
+ * README.md.
+ */
+const CLAUDE_BIN = process.env.CLAUDE_CLI_PATH?.trim() || "claude";
+
+/**
  * Invoca a Claude Code CLI já instalada na máquina, como processo local —
  * nunca via API remota. O Jarvis não tem "agente próprio": ele é uma casca
  * de UI + orquestração em cima do binário `claude`.
@@ -21,7 +29,8 @@ export interface RunClaudeOptions {
 export function streamClaudePrompt(options: RunClaudeOptions): ReadableStream<Uint8Array> {
   const { prompt, cwd, planOnly } = options;
 
-  const args = ["-p", prompt, "--output-format", "stream-json"];
+  // --verbose é exigido pela CLI junto de --print + --output-format stream-json.
+  const args = ["-p", prompt, "--output-format", "stream-json", "--verbose"];
   if (planOnly) {
     args.push("--permission-mode", "plan");
   }
@@ -36,7 +45,7 @@ export function streamClaudePrompt(options: RunClaudeOptions): ReadableStream<Ui
 
       send({ type: "system", subtype: "init", permissionMode: planOnly ? "plan" : "default" });
 
-      const child = spawn("claude", args, { cwd, shell: false });
+      const child = spawn(CLAUDE_BIN, args, { cwd, shell: false });
 
       let buffer = "";
 
@@ -63,7 +72,7 @@ export function streamClaudePrompt(options: RunClaudeOptions): ReadableStream<Ui
       child.on("error", (err) => {
         send({
           type: "error",
-          message: `Não foi possível iniciar a Claude Code CLI: ${err.message}. Verifique se "claude" está no PATH.`,
+          message: `Não foi possível iniciar a Claude Code CLI ("${CLAUDE_BIN}"): ${err.message}. Verifique se "claude" está no PATH ou defina CLAUDE_CLI_PATH no .env.local.`,
         });
         controller.close();
       });
@@ -80,6 +89,12 @@ export function streamClaudePrompt(options: RunClaudeOptions): ReadableStream<Ui
   });
 }
 
+/**
+ * O `stream-json` real da CLI aninha o texto em `message.content[]` (blocos
+ * `text`, `thinking`, `tool_use`) — só os blocos `text` são resposta visível
+ * pro usuário; os demais (thinking, tool_use, tool_result, eventos de
+ * sistema/rate-limit) são ruído interno de execução e não viram bolha de chat.
+ */
 function forwardParsedLine(
   parsed: unknown,
   send: (event: ClaudeStreamEvent) => void
@@ -87,8 +102,16 @@ function forwardParsedLine(
   if (typeof parsed !== "object" || parsed === null) return;
   const obj = parsed as Record<string, unknown>;
 
-  if (obj.type === "assistant" && typeof obj.text === "string") {
-    send({ type: "assistant", text: obj.text });
+  if (obj.type === "assistant" && typeof obj.message === "object" && obj.message !== null) {
+    const message = obj.message as Record<string, unknown>;
+    const content = Array.isArray(message.content) ? message.content : [];
+    for (const block of content) {
+      if (typeof block !== "object" || block === null) continue;
+      const b = block as Record<string, unknown>;
+      if (b.type === "text" && typeof b.text === "string") {
+        send({ type: "assistant", text: b.text });
+      }
+    }
     return;
   }
 
@@ -101,6 +124,5 @@ function forwardParsedLine(
     return;
   }
 
-  // Formato inesperado da CLI: repassa como texto bruto em vez de silenciar.
-  send({ type: "assistant", text: JSON.stringify(obj) });
+  // system/user (tool_result)/rate_limit_event/etc — eventos internos da CLI.
 }

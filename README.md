@@ -8,6 +8,24 @@ Dashboard local (Next.js) para operar a [Claude Code](https://claude.com/product
 - [Claude Code CLI](https://claude.com/product/claude-code) instalada e disponível no `PATH` como `claude`
 - Git
 
+### Se você só tem a extensão do VS Code (sem CLI standalone no PATH)
+
+A extensão `anthropic.claude-code` do VS Code embute o binário nativo em
+`resources/native-binary/claude.exe` dentro da própria pasta da extensão
+(ex.: `%USERPROFILE%\.vscode\extensions\anthropic.claude-code-<versão>-win32-x64\`).
+Crie um `.env.local` na raiz do projeto apontando para ele. Use barras
+normais e **sem aspas duplas** — o parser de `.env` do Next.js interpreta
+`\r`/`\n` dentro de aspas duplas como caracteres de controle, o que corrompe
+caminhos Windows com pastas como `resources` ou `native-binary`:
+
+```
+CLAUDE_CLI_PATH=C:/Users/<voce>/.vscode/extensions/anthropic.claude-code-<versão>-win32-x64/resources/native-binary/claude.exe
+```
+
+Esse caminho muda a cada atualização da extensão (a versão vai no nome da
+pasta) — se o Chat começar a falhar com "ENOENT" depois de uma atualização,
+é só ajustar o `.env.local`.
+
 ## Rodando localmente
 
 ```bash
