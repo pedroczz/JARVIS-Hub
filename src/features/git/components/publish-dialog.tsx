@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { readSse } from "@/lib/sse-client";
-import { cn } from "@/lib/utils";
+import { readSse } from "@/utils/sse-client";
+import { cn } from "@/utils/cn";
 import type { PublishStepResult } from "@/types/git";
 
 export function PublishDialog({ projectId }: { projectId: string }) {

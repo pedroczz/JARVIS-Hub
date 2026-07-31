@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { stat } from "node:fs/promises";
 import path from "node:path";
 
-import { detectProject } from "@/lib/detect";
-import { ensureMemory } from "@/lib/memory";
-import { connectProject, listProjects } from "@/lib/registry";
+import { detectProject } from "@/services/detect";
+import { ensureMemory } from "@/services/memory";
+import { connectProject, listProjects } from "@/services/registry";
 
 export async function GET() {
   const projects = await listProjects();

@@ -1,4 +1,4 @@
-import { runGit } from "./client";
+import { runGit } from "@/lib/exec-git";
 import type { GitBranch, GitLogEntry, GitRemote, GitStatus, GitStatusEntry } from "@/types/git";
 
 export async function getStatus(cwd: string): Promise<GitStatus> {

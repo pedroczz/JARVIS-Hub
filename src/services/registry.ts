@@ -11,8 +11,10 @@ import type { ProjectPermissions } from "@/types/permissions";
  * O registry vive fora de qualquer repositório (~/.jarvis/registry.json),
  * de propósito: o Jarvis nunca deve versionar caminhos/segredos locais do
  * usuário dentro do repo de um projeto conectado, nem do próprio Jarvis.
+ * Configurável via JARVIS_HOME_DIR — usado pelos testes pra isolar o
+ * registry real do usuário, sem precisar mockar node:fs.
  */
-const JARVIS_HOME = path.join(homedir(), ".jarvis");
+const JARVIS_HOME = process.env.JARVIS_HOME_DIR?.trim() || path.join(homedir(), ".jarvis");
 const REGISTRY_PATH = path.join(JARVIS_HOME, "registry.json");
 
 async function ensureRegistryFile(): Promise<void> {

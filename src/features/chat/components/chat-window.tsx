@@ -3,22 +3,36 @@
 import { Send } from "lucide-react";
 import { useState } from "react";
 
-import { MessageBubble } from "@/components/chat/message-bubble";
+import { MessageBubble } from "@/features/chat/components/message-bubble";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import { readSse } from "@/lib/sse-client";
-import { useChatStore } from "@/stores/use-chat-store";
+import { readSse } from "@/utils/sse-client";
+import { useChatStore } from "@/store/use-chat-store";
 import type { ClaudeStreamEvent } from "@/types/chat";
 
 function uid(): string {
   return crypto.randomUUID();
 }
 
+/** Avisos conhecidos e inofensivos da CLI — não fatais, não viram ruído na bolha de resposta. */
+const BENIGN_STDERR_PATTERNS = [
+  /^Warning: no stdin data received/,
+  /^Ignoring \d+ permissions\.allow entries/,
+];
+
 export function ChatWindow({ projectId }: { projectId: string }) {
   const [input, setInput] = useState("");
-  const { messages, isStreaming, addMessage, appendToMessage, finishMessage, setStreaming } =
-    useChatStore();
+  const {
+    messages,
+    isStreaming,
+    sessionId,
+    addMessage,
+    appendToMessage,
+    finishMessage,
+    setStreaming,
+    setSessionId,
+  } = useChatStore();
 
   const send = async () => {
     const prompt = input.trim();
@@ -41,13 +55,16 @@ export function ChatWindow({ projectId }: { projectId: string }) {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, projectId }),
+        body: JSON.stringify({ prompt, projectId, sessionId }),
       });
 
       await readSse<ClaudeStreamEvent>(res, (event) => {
         if (event.type === "assistant") {
           appendToMessage(assistantId, event.text);
+        } else if (event.type === "session") {
+          setSessionId(event.sessionId);
         } else if (event.type === "error") {
+          if (BENIGN_STDERR_PATTERNS.some((pattern) => pattern.test(event.message))) return;
           appendToMessage(assistantId, `\n[erro] ${event.message}`);
         }
       });

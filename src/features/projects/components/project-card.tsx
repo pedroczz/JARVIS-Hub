@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { GitBranch, Trash2 } from "lucide-react";
 
-import { PermissionToggles } from "@/components/projects/permission-toggles";
+import { PermissionToggles } from "@/features/projects/components/permission-toggles";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils/cn";
 import type { ChatMessage } from "@/types/chat";
 
 export function MessageBubble({ message }: { message: ChatMessage }) {

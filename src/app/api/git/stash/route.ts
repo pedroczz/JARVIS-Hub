@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { stashList, stashSave } from "@/lib/git/operations";
-import { requirePermission, resolveProjectOrError, runGitOrError } from "@/lib/git/resolve-project";
+import { stashList, stashSave } from "@/services/git/operations";
+import { requirePermission, resolveProjectOrError, runGitOrError } from "@/services/git/resolve-project";
 
 export async function GET(request: NextRequest) {
   const projectId = request.nextUrl.searchParams.get("projectId");

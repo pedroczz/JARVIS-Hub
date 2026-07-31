@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { PublishDialog } from "@/components/git/publish-dialog";
+import { PublishDialog } from "@/features/git/components/publish-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { GitBranch, GitLogEntry, GitStatus } from "@/types/git";

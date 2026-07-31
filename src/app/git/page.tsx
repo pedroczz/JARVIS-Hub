@@ -1,7 +1,7 @@
 "use client";
 
-import { GitPanel } from "@/components/git/git-panel";
-import { useProjectStore } from "@/stores/use-project-store";
+import { GitPanel } from "@/features/git/components/git-panel";
+import { useProjectStore } from "@/store/use-project-store";
 
 export default function GitPage() {
   const activeProjectId = useProjectStore((s) => s.activeProjectId);

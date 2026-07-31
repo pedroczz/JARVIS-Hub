@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { useProjectStore } from "@/stores/use-project-store";
+import { useProjectStore } from "@/store/use-project-store";
 import type { Project } from "@/types/project";
 
 async function fetchProjects(): Promise<Project[]> {

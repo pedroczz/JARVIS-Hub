@@ -2,8 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { ConnectProjectDialog } from "@/components/projects/connect-project-dialog";
-import { ProjectCard } from "@/components/projects/project-card";
+import { ConnectProjectDialog } from "@/features/projects/components/connect-project-dialog";
+import { ProjectCard } from "@/features/projects/components/project-card";
 import type { Project } from "@/types/project";
 
 async function fetchProjects(): Promise<Project[]> {

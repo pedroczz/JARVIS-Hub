@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { publishProject } from "@/lib/git/publish";
-import { requirePermission, resolveProjectOrError } from "@/lib/git/resolve-project";
+import { publishProject } from "@/services/git/publish";
+import { requirePermission, resolveProjectOrError } from "@/services/git/resolve-project";
 
 export const dynamic = "force-dynamic";
 

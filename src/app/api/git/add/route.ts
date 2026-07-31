@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { stageAll } from "@/lib/git/operations";
-import { requirePermission, resolveProjectOrError, runGitOrError } from "@/lib/git/resolve-project";
+import { stageAll } from "@/services/git/operations";
+import { requirePermission, resolveProjectOrError, runGitOrError } from "@/services/git/resolve-project";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();

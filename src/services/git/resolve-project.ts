@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getProject } from "@/lib/registry";
+import { getProject } from "@/services/registry";
 import type { Project } from "@/types/project";
 
-import { GitError } from "./client";
+import { GitError } from "@/lib/exec-git";
 
 export async function resolveProjectOrError(
   projectId: string | null

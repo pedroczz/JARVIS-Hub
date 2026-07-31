@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { disconnectProject, getProject, updateProjectPermissions } from "@/lib/registry";
+import { disconnectProject, getProject, updateProjectPermissions } from "@/services/registry";
 
 interface RouteContext {
   params: Promise<{ id: string }>;

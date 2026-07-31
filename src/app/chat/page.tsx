@@ -1,7 +1,7 @@
 "use client";
 
-import { ChatWindow } from "@/components/chat/chat-window";
-import { useProjectStore } from "@/stores/use-project-store";
+import { ChatWindow } from "@/features/chat/components/chat-window";
+import { useProjectStore } from "@/store/use-project-store";
 
 export default function ChatPage() {
   const activeProjectId = useProjectStore((s) => s.activeProjectId);

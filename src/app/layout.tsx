@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/top-bar";
-import { Providers } from "@/components/providers";
+import { Providers } from "@/providers/query-provider";
 
 import "./globals.css";
 

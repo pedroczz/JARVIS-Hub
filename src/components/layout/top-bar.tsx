@@ -1,4 +1,4 @@
-import { ProjectSelector } from "./project-selector";
+import { ProjectSelector } from "@/features/projects/components/project-selector";
 
 export function TopBar() {
   return (

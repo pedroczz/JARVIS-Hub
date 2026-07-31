@@ -1,6 +1,6 @@
 import type { PublishStep, PublishStepResult } from "@/types/git";
 
-import { runNpmScript } from "./client";
+import { runNpmScript } from "@/lib/exec-git";
 import { commit, getStatus, push, stageAll } from "./operations";
 
 export interface PublishOptions {

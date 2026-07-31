@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { detectProject } from "@/lib/detect";
+import { detectProject } from "@/services/detect";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();

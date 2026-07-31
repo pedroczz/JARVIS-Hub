@@ -1,7 +1,7 @@
 import { FolderGit2, ShieldCheck } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { listProjects } from "@/lib/registry";
+import { listProjects } from "@/services/registry";
 
 export default async function HomePage() {
   const projects = await listProjects();

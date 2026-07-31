@@ -1,5 +1,7 @@
 import { spawn } from "node:child_process";
+import { randomUUID } from "node:crypto";
 
+import { AGENT_SYSTEM_PROMPT } from "@/config/agent-system-prompt";
 import type { ClaudeStreamEvent } from "@/types/chat";
 
 export interface RunClaudeOptions {
@@ -7,6 +9,8 @@ export interface RunClaudeOptions {
   cwd: string;
   /** true quando o projeto ainda não tem permissão de implementar/refatorar. */
   planOnly: boolean;
+  /** sessionId de uma conversa anterior nesta janela de Chat — retoma contexto via --resume. Omitido na primeira mensagem. */
+  sessionId?: string;
 }
 
 /**
@@ -27,13 +31,22 @@ const CLAUDE_BIN = process.env.CLAUDE_CLI_PATH?.trim() || "claude";
  * executa mudanças — mesmo que o usuário peça diretamente no chat.
  */
 export function streamClaudePrompt(options: RunClaudeOptions): ReadableStream<Uint8Array> {
-  const { prompt, cwd, planOnly } = options;
+  const { prompt, cwd, planOnly, sessionId } = options;
 
   // --verbose é exigido pela CLI junto de --print + --output-format stream-json.
   const args = ["-p", prompt, "--output-format", "stream-json", "--verbose"];
   if (planOnly) {
     args.push("--permission-mode", "plan");
   }
+  args.push("--append-system-prompt", AGENT_SYSTEM_PROMPT);
+
+  // Continuidade de conversa: sem isso, cada mensagem do Chat era um
+  // processo `claude` novo e sem memória da mensagem anterior. Com
+  // sessionId existente, retoma via --resume; senão gera um novo e o
+  // repassa pro cliente guardar (evento "session"), pra próxima mensagem
+  // já vir com --resume.
+  const effectiveSessionId = sessionId ?? randomUUID();
+  args.push(sessionId ? "--resume" : "--session-id", effectiveSessionId);
 
   const encoder = new TextEncoder();
   let child: ReturnType<typeof spawn> | null = null;
@@ -66,6 +79,7 @@ export function streamClaudePrompt(options: RunClaudeOptions): ReadableStream<Ui
       };
 
       send({ type: "system", subtype: "init", permissionMode: planOnly ? "plan" : "default" });
+      send({ type: "session", sessionId: effectiveSessionId });
 
       const proc = spawn(CLAUDE_BIN, args, { cwd, shell: false });
       child = proc;
@@ -124,7 +138,7 @@ export function streamClaudePrompt(options: RunClaudeOptions): ReadableStream<Ui
  * pro usuário; os demais (thinking, tool_use, tool_result, eventos de
  * sistema/rate-limit) são ruído interno de execução e não viram bolha de chat.
  */
-function forwardParsedLine(
+export function forwardParsedLine(
   parsed: unknown,
   send: (event: ClaudeStreamEvent) => void
 ): void {
