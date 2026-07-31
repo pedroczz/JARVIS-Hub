@@ -36,20 +36,43 @@ export function streamClaudePrompt(options: RunClaudeOptions): ReadableStream<Ui
   }
 
   const encoder = new TextEncoder();
+  let child: ReturnType<typeof spawn> | null = null;
+  // O consumidor (fetch do navegador) pode desconectar a qualquer momento —
+  // navegação, refresh, timeout de proxy. Sem essa guarda, os listeners do
+  // child_process continuam chamando controller.enqueue()/close() depois que
+  // o controller já foi fechado, derrubando o processo com uma exceção não
+  // tratada a cada chunk de stdout/stderr que ainda chegar.
+  let closed = false;
+
+  const closeController = (controller: ReadableStreamDefaultController<Uint8Array>) => {
+    if (closed) return;
+    closed = true;
+    try {
+      controller.close();
+    } catch {
+      // já fechado pelo runtime (ex.: consumidor cancelou) — nada a fazer.
+    }
+  };
 
   return new ReadableStream<Uint8Array>({
     start(controller) {
       const send = (event: ClaudeStreamEvent) => {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+        } catch {
+          closed = true;
+        }
       };
 
       send({ type: "system", subtype: "init", permissionMode: planOnly ? "plan" : "default" });
 
-      const child = spawn(CLAUDE_BIN, args, { cwd, shell: false });
+      const proc = spawn(CLAUDE_BIN, args, { cwd, shell: false });
+      child = proc;
 
       let buffer = "";
 
-      child.stdout.on("data", (chunk: Buffer) => {
+      proc.stdout.on("data", (chunk: Buffer) => {
         buffer += chunk.toString("utf-8");
         const lines = buffer.split("\n");
         buffer = lines.pop() ?? "";
@@ -65,26 +88,32 @@ export function streamClaudePrompt(options: RunClaudeOptions): ReadableStream<Ui
         }
       });
 
-      child.stderr.on("data", (chunk: Buffer) => {
+      proc.stderr.on("data", (chunk: Buffer) => {
         send({ type: "error", message: chunk.toString("utf-8") });
       });
 
-      child.on("error", (err) => {
+      proc.on("error", (err) => {
         send({
           type: "error",
           message: `Não foi possível iniciar a Claude Code CLI ("${CLAUDE_BIN}"): ${err.message}. Verifique se "claude" está no PATH ou defina CLAUDE_CLI_PATH no .env.local.`,
         });
-        controller.close();
+        closeController(controller);
       });
 
-      child.on("close", (code) => {
+      proc.on("close", (code) => {
         send({
           type: "result",
           subtype: code === 0 ? "success" : "error",
           summary: code === 0 ? undefined : `Processo encerrado com código ${code}`,
         });
-        controller.close();
+        closeController(controller);
       });
+    },
+    cancel() {
+      // Consumidor desconectou (navegação, refresh, aba fechada) — mata o
+      // processo em vez de deixá-lo órfão rodando até terminar sozinho.
+      closed = true;
+      child?.kill();
     },
   });
 }
