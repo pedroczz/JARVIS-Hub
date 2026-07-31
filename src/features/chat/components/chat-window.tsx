@@ -61,6 +61,13 @@ export function ChatWindow({ projectId }: { projectId: string }) {
       await readSse<ClaudeStreamEvent>(res, (event) => {
         if (event.type === "assistant") {
           appendToMessage(assistantId, event.text);
+        } else if (event.type === "tool") {
+          addMessage({
+            id: uid(),
+            role: "system",
+            content: event.detail ? `${event.name}: ${event.detail}` : event.name,
+            createdAt: new Date().toISOString(),
+          });
         } else if (event.type === "session") {
           setSessionId(event.sessionId);
         } else if (event.type === "error") {

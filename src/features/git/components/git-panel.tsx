@@ -1,9 +1,10 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { PublishDialog } from "@/features/git/components/publish-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { GitBranch, GitLogEntry, GitStatus } from "@/types/git";
 
@@ -13,7 +14,11 @@ async function fetchJson<T>(url: string): Promise<T> {
   return res.json();
 }
 
+const NOT_A_REPO_MESSAGE = "Este projeto ainda não é um repositório git.";
+
 export function GitPanel({ projectId }: { projectId: string }) {
+  const queryClient = useQueryClient();
+
   const status = useQuery({
     queryKey: ["git-status", projectId],
     queryFn: () => fetchJson<{ status: GitStatus }>(`/api/git/status?projectId=${projectId}`),
@@ -27,11 +32,40 @@ export function GitPanel({ projectId }: { projectId: string }) {
     queryFn: () => fetchJson<{ branches: GitBranch[] }>(`/api/git/branches?projectId=${projectId}`),
   });
 
+  const init = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/git/init", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error ?? "Falha ao inicializar o repositório");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["git-status", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["git-log", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["git-branches", projectId] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+
   if (status.isError) {
+    const message = status.error instanceof Error ? status.error.message : "Falha ao ler o estado do git.";
     return (
-      <p className="text-sm text-muted-foreground">
-        {status.error instanceof Error ? status.error.message : "Falha ao ler o estado do git."}
-      </p>
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground">{message}</p>
+        {message === NOT_A_REPO_MESSAGE && (
+          <>
+            <Button size="sm" onClick={() => init.mutate()} disabled={init.isPending}>
+              {init.isPending ? "Inicializando…" : "Inicializar repositório"}
+            </Button>
+            {init.isError && (
+              <p className="text-xs text-destructive">{(init.error as Error).message}</p>
+            )}
+          </>
+        )}
+      </div>
     );
   }
 

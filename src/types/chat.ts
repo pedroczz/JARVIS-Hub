@@ -20,5 +20,7 @@ export type ClaudeStreamEvent =
   /** sessionId da CLI para esta conversa — cliente reenvia em mensagens seguintes pra manter contexto (--resume). */
   | { type: "session"; sessionId: string }
   | { type: "assistant"; text: string }
+  /** A CLI chamou uma tool (Write/Edit/Bash/Read/...) — visibilidade do que está sendo feito, não é a resposta em si. */
+  | { type: "tool"; name: string; detail?: string }
   | { type: "result"; subtype: "success" | "error"; summary?: string }
   | { type: "error"; message: string };

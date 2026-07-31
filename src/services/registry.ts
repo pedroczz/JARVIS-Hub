@@ -85,6 +85,19 @@ export async function updateProjectPermissions(
   return project;
 }
 
+export async function updateProjectDetection(
+  id: string,
+  detection: ProjectDetection
+): Promise<Project | null> {
+  const registry = await readRegistry();
+  const project = registry.projects.find((p) => p.id === id);
+  if (!project) return null;
+
+  project.detection = detection;
+  await writeRegistry(registry);
+  return project;
+}
+
 export async function getProject(id: string): Promise<Project | null> {
   const registry = await readRegistry();
   return registry.projects.find((p) => p.id === id) ?? null;

@@ -1,6 +1,10 @@
 import { runGit } from "@/lib/exec-git";
 import type { GitBranch, GitLogEntry, GitRemote, GitStatus, GitStatusEntry } from "@/types/git";
 
+export async function initRepo(cwd: string): Promise<string> {
+  return runGit(cwd, ["init", "-b", "main"]);
+}
+
 export async function getStatus(cwd: string): Promise<GitStatus> {
   const [branchOut, statusOut] = await Promise.all([
     runGit(cwd, ["status", "--branch", "--porcelain=v2"]),

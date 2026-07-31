@@ -1,7 +1,18 @@
+import { Wrench } from "lucide-react";
+
 import { cn } from "@/utils/cn";
 import type { ChatMessage } from "@/types/chat";
 
 export function MessageBubble({ message }: { message: ChatMessage }) {
+  if (message.role === "system") {
+    return (
+      <div className="flex items-center gap-1.5 pl-1 font-mono text-xs text-muted-foreground">
+        <Wrench className="size-3 shrink-0" />
+        <span className="truncate">{message.content}</span>
+      </div>
+    );
+  }
+
   const isUser = message.role === "user";
   return (
     <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>

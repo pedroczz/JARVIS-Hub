@@ -9,7 +9,7 @@ function capture() {
 }
 
 describe("forwardParsedLine", () => {
-  it("extrai só os blocos de texto de message.content, ignora thinking/tool_use", () => {
+  it("extrai texto de message.content e ignora thinking, mas ambos são reportados", () => {
     const { send, events } = capture();
 
     forwardParsedLine(
@@ -18,7 +18,7 @@ describe("forwardParsedLine", () => {
         message: {
           content: [
             { type: "thinking", thinking: "..." },
-            { type: "tool_use", name: "Read", input: {} },
+            { type: "tool_use", name: "Read", input: { file_path: "README.md" } },
             { type: "text", text: "olá" },
           ],
         },
@@ -26,7 +26,19 @@ describe("forwardParsedLine", () => {
       send
     );
 
-    expect(events).toEqual([{ type: "assistant", text: "olá" }]);
+    expect(events).toEqual([
+      { type: "tool", name: "Read", detail: "README.md" },
+      { type: "assistant", text: "olá" },
+    ]);
+  });
+
+  it("tool_use sem input reconhecido manda detail undefined em vez de quebrar", () => {
+    const { send, events } = capture();
+    forwardParsedLine(
+      { type: "assistant", message: { content: [{ type: "tool_use", name: "TodoWrite", input: { todos: [] } }] } },
+      send
+    );
+    expect(events).toEqual([{ type: "tool", name: "TodoWrite", detail: undefined }]);
   });
 
   it("repassa result com subtype success/error", () => {

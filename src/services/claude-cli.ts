@@ -133,10 +133,33 @@ export function streamClaudePrompt(options: RunClaudeOptions): ReadableStream<Ui
 }
 
 /**
+ * Resume o input de uma tool_use num texto curto e legível — o que o
+ * usuário precisa pra saber "o que ela tá fazendo", sem despejar o JSON
+ * bruto do input inteiro (que pra Write/Edit inclui o conteúdo do arquivo).
+ */
+function summarizeToolInput(name: string, input: Record<string, unknown>): string | undefined {
+  switch (name) {
+    case "Write":
+    case "Edit":
+    case "Read":
+      return typeof input.file_path === "string" ? input.file_path : undefined;
+    case "Bash":
+      return typeof input.command === "string" ? input.command : undefined;
+    case "Grep":
+    case "Glob":
+      return typeof input.pattern === "string" ? input.pattern : undefined;
+    default:
+      return undefined;
+  }
+}
+
+/**
  * O `stream-json` real da CLI aninha o texto em `message.content[]` (blocos
- * `text`, `thinking`, `tool_use`) — só os blocos `text` são resposta visível
- * pro usuário; os demais (thinking, tool_use, tool_result, eventos de
- * sistema/rate-limit) são ruído interno de execução e não viram bolha de chat.
+ * `text`, `thinking`, `tool_use`). Blocos `text` viram a resposta em si;
+ * `tool_use` vira um evento "tool" (visibilidade do que está sendo feito no
+ * disco, sem que o usuário precise abrir a pasta manualmente pra saber);
+ * `thinking`, `tool_result`, eventos de sistema/rate-limit continuam
+ * silenciados — são ruído interno demais pra virar UI.
  */
 export function forwardParsedLine(
   parsed: unknown,
@@ -153,6 +176,9 @@ export function forwardParsedLine(
       const b = block as Record<string, unknown>;
       if (b.type === "text" && typeof b.text === "string") {
         send({ type: "assistant", text: b.text });
+      } else if (b.type === "tool_use" && typeof b.name === "string") {
+        const input = typeof b.input === "object" && b.input !== null ? (b.input as Record<string, unknown>) : {};
+        send({ type: "tool", name: b.name, detail: summarizeToolInput(b.name, input) });
       }
     }
     return;
