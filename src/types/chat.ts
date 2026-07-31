@@ -17,6 +17,8 @@ export interface ChatSession {
 /** Eventos emitidos pela rota /api/chat via SSE, espelhando `claude --output-format stream-json`. */
 export type ClaudeStreamEvent =
   | { type: "system"; subtype: "init"; permissionMode: string }
+  /** sessionId da CLI para esta conversa — cliente reenvia em mensagens seguintes pra manter contexto (--resume). */
+  | { type: "session"; sessionId: string }
   | { type: "assistant"; text: string }
   | { type: "result"; subtype: "success" | "error"; summary?: string }
   | { type: "error"; message: string };
