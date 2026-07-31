@@ -1,13 +1,15 @@
-import { Stethoscope } from "lucide-react";
-
-import { StubPage } from "@/components/layout/stub-page";
+import { HealthPanel } from "@/features/doctor/components/health-panel";
 
 export default function DoctorPage() {
   return (
-    <StubPage
-      icon={Stethoscope}
-      title="Doctor"
-      description="Diagnóstico de saúde do projeto conectado: dependências desatualizadas, CVEs, configuração quebrada."
-    />
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Doctor</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Saúde dos módulos registrados no Core — CLI, Git, registry de projetos.
+        </p>
+      </div>
+      <HealthPanel />
+    </div>
   );
 }

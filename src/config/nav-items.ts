@@ -25,7 +25,7 @@ export interface NavItem {
   status: "ready" | "soon";
 }
 
-/** 16 módulos da sidebar — 4 funcionais, 12 "em breve". */
+/** 16 módulos da sidebar — 5 funcionais, 11 "em breve". */
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Home", icon: Home, status: "ready" },
   { href: "/projetos", label: "Projetos", icon: FolderGit2, status: "ready" },
@@ -36,7 +36,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/backlog", label: "Backlog", icon: ListTodo, status: "soon" },
   { href: "/roadmap", label: "Roadmap", icon: Map, status: "soon" },
   { href: "/memoria", label: "Memória", icon: Brain, status: "soon" },
-  { href: "/doctor", label: "Doctor", icon: Stethoscope, status: "soon" },
+  { href: "/doctor", label: "Doctor", icon: Stethoscope, status: "ready" },
   { href: "/cto", label: "CTO", icon: Crown, status: "soon" },
   { href: "/documentacao", label: "Documentação", icon: FileText, status: "soon" },
   { href: "/deploy", label: "Deploy", icon: Rocket, status: "soon" },
